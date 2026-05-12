@@ -15,13 +15,40 @@ export default function InvoiceForm() {
   const [price, setPrice] = useState("");
   const [vatRate, setVatRate] = useState("21");
 
+  const [targetLanguage, setTargetLanguage] = useState("nl");
+  const [translatedService, setTranslatedService] = useState("");
+
   const subtotal = Number(quantity) * Number(price);
   const vatAmount = subtotal * (Number(vatRate) / 100);
   const total = subtotal + vatAmount;
 
+  const translateInvoice = () => {
+    const translations: Record<string, Record<string, string>> = {
+      nl: {
+        "Bilreparation": "Autoreparatie",
+        "Oljebyte": "Olie verversen",
+        "Städning": "Schoonmaak",
+      },
+      en: {
+        "Bilreparation": "Car repair",
+        "Oljebyte": "Oil change",
+        "Städning": "Cleaning",
+      },
+      ar: {
+        "Bilreparation": "تصليح سيارة",
+        "Oljebyte": "تغيير الزيت",
+        "Städning": "تنظيف",
+      },
+    };
+
+    const translated =
+      translations[targetLanguage]?.[service] || service;
+
+    setTranslatedService(translated);
+  };
+
   const downloadPDF = async () => {
     const invoiceElement = document.getElementById("invoice");
-
     if (!invoiceElement) return;
 
     const canvas = await html2canvas(invoiceElement, {
@@ -50,6 +77,25 @@ export default function InvoiceForm() {
       <input className="border p-2 w-full" placeholder="Quantity" type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
       <input className="border p-2 w-full" placeholder="Price" type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
       <input className="border p-2 w-full" placeholder="VAT %" type="number" value={vatRate} onChange={(e) => setVatRate(e.target.value)} />
+
+      <div className="flex gap-2">
+        <select
+          className="border p-2 w-full"
+          value={targetLanguage}
+          onChange={(e) => setTargetLanguage(e.target.value)}
+        >
+          <option value="nl">Dutch</option>
+          <option value="en">English</option>
+          <option value="ar">Arabic</option>
+        </select>
+
+        <button
+          className="bg-green-600 text-white font-bold py-2 px-4 rounded"
+          onClick={translateInvoice}
+        >
+          Translate
+        </button>
+      </div>
 
       <div id="invoice" className="border p-8 mt-10 rounded bg-white shadow text-black">
         <div className="flex justify-between mb-8">
@@ -82,7 +128,9 @@ export default function InvoiceForm() {
 
           <tbody>
             <tr className="border-b">
-              <td className="py-3">{service}</td>
+              <td className="py-3">
+                {translatedService || service}
+              </td>
               <td className="text-center py-3">{quantity}</td>
               <td className="text-right py-3">€{Number(price || 0).toFixed(2)}</td>
               <td className="text-right py-3">€{subtotal.toFixed(2)}</td>
